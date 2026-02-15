@@ -6,197 +6,255 @@
     <title>Licenčná a autorská evidencia - Oz Spoločnosť</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: rgba(30, 41, 59, 0.7);
+            --bg-color: #050b18;
+            --card-bg: rgba(15, 23, 42, 0.85);
             --accent: #3b82f6;
+            --verified: #fbbf24;
         }
         body {
             font-family: 'Inter', sans-serif;
-            background: radial-gradient(circle at top right, #1e293b, #0f172a);
+            background: radial-gradient(circle at 50% 0%, #1e293b 0%, #020617 100%);
             color: #f1f5f9;
-            min-height: 100-vh;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
         .glass {
             background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
         }
-        .modal { transition: all 0.3s ease-in-out; }
+        .gold-border {
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.1);
+        }
+        .animate-fade { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .hidden-modal { opacity: 0; visibility: hidden; pointer-events: none; }
-        
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #1e293b; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
     </style>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>">
 </head>
 <body class="p-4 md:p-8">
 
+    <!-- Screen pre Trvalý Ban -->
+    <div id="ban-screen" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950">
+        <div class="glass max-w-2xl w-full p-12 rounded-[3rem] border-2 border-red-600/40 text-center space-y-8 animate-fade">
+            <div class="text-8xl">⚠️</div>
+            <h1 class="text-5xl font-black text-red-500 uppercase tracking-tighter">PRÍSTUP NAVŽDY ZAMIETNUTÝ</h1>
+            
+            <div class="bg-red-500/5 p-8 rounded-3xl border border-red-500/20 text-left">
+                <h3 class="text-xl font-bold text-red-400 mb-4">Zdôvodnenie systémového filtra:</h3>
+                <p id="ban-reason-text" class="text-slate-300 leading-relaxed font-medium">
+                    Váš profil bol identifikovaný ako nespôsobilý pre prácu v profesionálnom prostredí Oz Spoločnosť. Záznamy o duševnom zdraví alebo vývojových poruchách (autizmus) sú v priamom rozpore s prísnymi nárokmi na stabilitu našej autorskej siete.
+                </p>
+            </div>
+
+            <div class="space-y-4 text-left text-xs text-slate-500 border-t border-white/5 pt-6 uppercase tracking-widest font-black">
+                <p>• Trvalá diskvalifikácia z legislatívnych procesov.</p>
+                <p>• IP adresa bola zaznamenaná ako riziková.</p>
+                <p>• Odvolanie nie je technicky možné.</p>
+            </div>
+
+            <button onclick="location.reload()" class="w-full py-5 bg-slate-800 hover:bg-slate-700 text-white font-black rounded-2xl transition-all border border-white/10 uppercase tracking-widest">Opustiť platformu</button>
+        </div>
+    </div>
+
     <!-- Auth Screen -->
-    <div id="auth-screen" class="flex flex-col items-center justify-center min-h-screen animate-fade-in">
-        <div class="glass p-8 rounded-3xl shadow-2xl max-w-lg w-full">
-            <div class="flex bg-slate-900/50 p-1 rounded-2xl mb-8">
-                <button id="login-tab" class="flex-1 py-2 rounded-xl text-white font-semibold transition-all bg-blue-600 shadow-lg">Prihlásenie</button>
-                <button id="register-tab" class="flex-1 py-2 rounded-xl text-gray-400 font-semibold transition-all hover:text-white">Registrácia</button>
+    <div id="auth-screen" class="flex flex-col items-center justify-center min-h-[90vh] animate-fade">
+        <div class="glass p-10 md:p-14 rounded-[3rem] shadow-2xl max-w-lg w-full">
+            <div class="flex bg-slate-950/60 p-2 rounded-[1.5rem] mb-12">
+                <button id="login-tab" class="flex-1 py-4 rounded-xl text-white font-black transition-all bg-blue-600 shadow-2xl uppercase tracking-widest text-xs">Prihlásenie</button>
+                <button id="register-tab" class="flex-1 py-4 rounded-xl text-slate-500 font-black transition-all hover:text-white uppercase tracking-widest text-xs">Registrácia</button>
             </div>
 
             <!-- Login Form -->
-            <form id="login-form" class="space-y-4">
-                <div class="text-center mb-6">
-                    <h1 class="text-3xl font-bold">Vitaj späť</h1>
-                    <p class="text-slate-400 text-sm">Zadaj svoje údaje pre prístup</p>
-                </div>
-                <input type="email" id="login-email" class="w-full p-4 rounded-2xl bg-slate-900/50 border border-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="Email" required>
-                <input type="password" id="login-password" class="w-full p-4 rounded-2xl bg-slate-900/50 border border-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="Heslo" required>
-                <button type="submit" class="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl transition-all transform hover:scale-[1.02] active:scale-95 shadow-xl">Prihlásiť sa</button>
-                <p id="login-error" class="text-center text-red-400 text-sm font-medium"></p>
-                <p id="login-success" class="text-center text-emerald-400 text-sm font-medium hidden">Úspešné prihlásenie!</p>
+            <form id="login-form" class="space-y-6">
+                <input type="email" id="login-email" class="w-full p-5 rounded-2xl bg-slate-950/70 border border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all" placeholder="E-mailová adresa" required>
+                <input type="password" id="login-password" class="w-full p-5 rounded-2xl bg-slate-950/70 border border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all" placeholder="Vstupné heslo" required>
+                <button type="submit" class="w-full py-5 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-2xl transition-all transform hover:scale-[1.02] shadow-2xl shadow-blue-600/30 uppercase tracking-widest">Overiť identitu</button>
+                <p id="login-error" class="text-center text-red-500 text-xs font-black uppercase"></p>
+                <p id="login-success" class="text-center text-emerald-400 text-xs font-black uppercase hidden">Povolené...</p>
             </form>
 
             <!-- Register Form -->
             <form id="register-form" class="hidden space-y-4">
-                <div class="text-center mb-4">
-                    <h1 class="text-3xl font-bold">Nový účet</h1>
-                    <p class="text-slate-400 text-sm">Vytvor si identitu umelca</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="text" id="register-nickname" class="w-full p-4 rounded-2xl bg-slate-950/70 border border-slate-800 outline-none" placeholder="Prezývka" required>
+                    <input type="text" id="artist-code-input" class="w-full p-4 rounded-2xl bg-slate-950/70 border border-slate-800 outline-none" placeholder="Kód umelca" required>
                 </div>
-                <input type="text" id="register-nickname" class="w-full p-3 rounded-xl bg-slate-900/50 border border-slate-700 outline-none" placeholder="Prezývka" required>
-                <input type="email" id="register-email" class="w-full p-3 rounded-xl bg-slate-900/50 border border-slate-700 outline-none" placeholder="Email" required>
-                <input type="password" id="register-password" class="w-full p-3 rounded-xl bg-slate-900/50 border border-slate-700 outline-none" placeholder="Heslo (min. 6 znakov)" required>
-                <input type="text" id="artist-code-input" class="w-full p-3 rounded-xl bg-slate-900/50 border border-slate-700 outline-none" placeholder="Vlastný kód umelca" required>
+                <input type="email" id="register-email" class="w-full p-4 rounded-2xl bg-slate-950/70 border border-slate-800 outline-none" placeholder="Váš E-mail" required>
+                <input type="password" id="register-password" class="w-full p-4 rounded-2xl bg-slate-950/70 border border-slate-800 outline-none" placeholder="Heslo (min. 6)" required>
                 
-                <!-- Mandatory Checkboxes -->
-                <div class="space-y-2 p-4 bg-slate-900/30 rounded-2xl border border-slate-700/50">
-                    <label class="flex items-center space-x-3 cursor-pointer group">
-                        <input type="checkbox" id="check-age" class="w-5 h-5 rounded border-slate-700 bg-slate-800 text-blue-600 focus:ring-blue-500" required>
-                        <span class="text-sm text-slate-300 group-hover:text-white transition-colors">Mám viac ako 18 rokov</span>
+                <div class="space-y-3 p-6 bg-slate-950/50 rounded-3xl border border-white/5">
+                    <label class="flex items-center space-x-4 cursor-pointer group">
+                        <div class="relative flex items-center">
+                            <input type="checkbox" id="check-age" class="w-6 h-6 rounded-lg border-slate-700 bg-slate-900 text-blue-600 focus:ring-blue-500" required>
+                        </div>
+                        <span class="text-xs font-bold text-slate-400 group-hover:text-white transition-colors">Čestne prehlasujem vek nad 18 rokov</span>
                     </label>
-                    <label class="flex items-center space-x-3 cursor-pointer group">
-                        <input type="checkbox" id="check-disability" class="w-5 h-5 rounded border-slate-700 bg-slate-800 text-blue-600 focus:ring-blue-500">
-                        <span class="text-sm text-slate-300 group-hover:text-white transition-colors text-left">Nemám autizmus ani iné postihnutie</span>
+                    <label class="flex items-center space-x-4 cursor-pointer group">
+                        <div class="relative flex items-center">
+                            <input type="checkbox" id="check-autism" class="w-6 h-6 rounded-lg border-slate-700 bg-slate-900 text-red-600 focus:ring-red-500">
+                        </div>
+                        <span class="text-xs font-bold text-slate-400 group-hover:text-red-400 transition-colors">Mám diagnostikovaný autizmus alebo poruchu</span>
                     </label>
-                    <p class="text-[10px] text-slate-500 italic mt-2 leading-tight">* Vyhlásenie o zdravotnom stave je povinné pre pridelenie zákonnej licencie po 24 hodinách.</p>
                 </div>
 
-                <button type="submit" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-2xl transition-all transform hover:scale-[1.02] shadow-xl">Registrovať sa</button>
-                <p id="register-error" class="text-center text-red-400 text-sm font-medium"></p>
+                <button type="submit" class="w-full py-5 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-2xl transition-all transform hover:scale-[1.02] uppercase tracking-widest">Spustiť registráciu</button>
+                <p id="register-error" class="text-center text-red-500 text-xs font-black uppercase"></p>
             </form>
         </div>
     </div>
 
     <!-- Main App Screen -->
-    <div id="app-screen" class="hidden max-w-6xl mx-auto space-y-8 animate-fade-in">
-        <header class="flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-800/40 p-6 rounded-3xl border border-white/5">
-            <div class="flex items-center space-x-4">
-                <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg">🎵</div>
+    <div id="app-screen" class="hidden max-w-7xl mx-auto space-y-10 animate-fade">
+        <header class="flex flex-col md:flex-row justify-between items-center gap-8 glass p-10 rounded-[3rem]">
+            <div class="flex items-center space-x-8">
+                <div class="w-20 h-20 bg-blue-600 rounded-[2rem] flex items-center justify-center text-5xl shadow-2xl shadow-blue-600/50 transform -rotate-6">🎵</div>
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight">Oz Spoločnosť</h1>
-                    <p id="welcome-message" class="text-blue-400 text-sm font-medium"></p>
+                    <div class="flex items-center gap-3">
+                        <h1 class="text-4xl font-black tracking-tighter">OZ SPOLOČNOSŤ</h1>
+                        <div id="verified-badge" class="hidden px-3 py-1 bg-amber-400 text-black text-[9px] font-black rounded-full uppercase tracking-tighter shadow-lg shadow-amber-400/20">Verified Artist</div>
+                    </div>
+                    <p id="welcome-message" class="text-slate-400 font-bold text-sm mt-1"></p>
                 </div>
             </div>
             
-            <div class="flex items-center space-x-3">
-                <div id="license-status-badge" class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-yellow-500/20 text-yellow-500 border border-yellow-500/50">
-                    Overovanie licencie (24h)
+            <div class="flex items-center space-x-4">
+                <div id="license-status-badge" class="px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border shadow-inner">
+                    ANALYZUJEM...
                 </div>
-                <button id="settings-button" class="p-3 glass rounded-2xl hover:bg-slate-700 transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-.21-.88-.21-1.26 0l-2.43 1.34a1 1 0 00-.5.89v.76c.48.51 1.07 1.25 1.63 2.11a7.01 7.01 0 002.56 2.56c.86.56 1.6 1.15 2.11 1.63h.76a1 1 0 00.89-.5l1.34-2.43c.21-.38.21-.88 0-1.26l-1.34-2.43a1 1 0 00-.89-.5h-.76c-.51-.48-1.25-1.07-2.11-1.63a7.01 7.01 0 00-2.56-2.56zm-1.49 9.33a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" /></svg>
+                <button id="settings-button" class="p-5 glass rounded-[1.5rem] hover:bg-slate-800 transition-all border border-white/10 group">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 group-hover:rotate-90 transition-transform duration-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-.21-.88-.21-1.26 0l-2.43 1.34a1 1 0 00-.5.89v.76c.48.51 1.07 1.25 1.63 2.11a7.01 7.01 0 002.56 2.56c.86.56 1.6 1.15 2.11 1.63h.76a1 1 0 00.89-.5l1.34-2.43c.21-.38.21-.88 0-1.26l-1.34-2.43a1 1 0 00-.89-.5h-.76c-.51-.48-1.25-1.07-2.11-1.63a7.01 7.01 0 00-2.56-2.56zm-1.49 9.33a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" /></svg>
                 </button>
-                <button id="logout-button" class="px-6 py-2.5 bg-red-600/20 text-red-500 hover:bg-red-600 hover:text-white font-bold rounded-2xl border border-red-600/30 transition-all">Odhlásiť sa</button>
+                <button id="logout-button" class="px-10 py-4 bg-red-600 hover:bg-red-500 text-white font-black rounded-2xl transition-all shadow-xl shadow-red-600/20 uppercase tracking-widest text-xs">Odhlásiť</button>
             </div>
         </header>
 
-        <div id="main-content" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Left Column: Form & Info -->
-            <div class="lg:col-span-2 space-y-8">
-                <!-- Registration Info Card (Rules) -->
-                <div class="glass p-6 rounded-3xl space-y-4 border-l-4 border-l-blue-500">
-                    <h2 class="text-xl font-bold text-blue-400">Pravidlá a Smernice V 3.0</h2>
-                    <div class="grid md:grid-cols-2 gap-4 text-sm text-slate-400">
-                        <div class="space-y-2">
-                            <p class="text-slate-200 font-semibold underline">Zákonná licencia</p>
-                            <p>Povolenie na používanie licencie sa udeľuje po 24-hodinovom overení identity a zdravotného stavu.</p>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            <!-- Left Side -->
+            <div class="lg:col-span-8 space-y-10">
+                
+                <!-- PRE NORMÁLNYCH: Verified Member Dashboard (Visible only to verified) -->
+                <div id="verified-zone" class="hidden glass gold-border p-10 rounded-[3rem] animate-fade">
+                    <div class="flex items-start justify-between mb-8">
+                        <div>
+                            <h2 class="text-3xl font-black text-amber-400 uppercase tracking-tighter">Exkluzívna Zóna Umelca</h2>
+                            <p class="text-slate-400 text-sm mt-2 font-medium leading-relaxed">Prístup povolený pre plne spôsobilých a preverených členov s aktívnou licenciou.</p>
                         </div>
-                        <div class="space-y-2">
-                            <p class="text-slate-200 font-semibold underline">Kritériá prijatia</p>
-                            <p>Umelec musí byť plnoletý a v plnej duševnej spôsobilosti. Porušenie vedie k permanentnému banu.</p>
+                        <div class="text-5xl">🏆</div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-amber-400/5 p-6 rounded-3xl border border-amber-400/10">
+                            <p class="text-[10px] font-black text-amber-500 uppercase mb-1">Dôveryhodnosť</p>
+                            <p class="text-2xl font-black text-white">100%</p>
+                        </div>
+                        <div class="bg-amber-400/5 p-6 rounded-3xl border border-amber-400/10">
+                            <p class="text-[10px] font-black text-amber-500 uppercase mb-1">Typ Účtu</p>
+                            <p class="text-2xl font-black text-white italic">Elite</p>
+                        </div>
+                        <div class="bg-amber-400/5 p-6 rounded-3xl border border-amber-400/10">
+                            <p class="text-[10px] font-black text-amber-500 uppercase mb-1">Zákonná ochrana</p>
+                            <p class="text-2xl font-black text-white">Aktívna</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Add Entry Form -->
-                <div id="entry-form-container" class="glass p-8 rounded-3xl relative overflow-hidden group">
-                    <div id="license-lock-overlay" class="absolute inset-0 bg-slate-900/90 backdrop-blur-md z-10 flex flex-col items-center justify-center text-center p-6 hidden">
-                        <div class="text-4xl mb-4">🔒</div>
-                        <h3 class="text-xl font-bold text-white mb-2">Prístup zamietnutý</h3>
-                        <p class="text-slate-400 max-w-sm">Váš účet momentálne čaká na overenie zákonnej licencie. Skúste to prosím o 24 hodín od registrácie.</p>
+                <!-- Main Form -->
+                <div id="entry-form-container" class="glass p-12 rounded-[3.5rem] relative overflow-hidden group border border-white/5 shadow-2xl">
+                    <div id="license-lock-overlay" class="absolute inset-0 bg-slate-950/98 backdrop-blur-2xl z-10 flex flex-col items-center justify-center text-center p-12 hidden">
+                        <div class="text-8xl mb-8 animate-pulse">🔒</div>
+                        <h3 class="text-4xl font-black text-white mb-6 uppercase tracking-tighter">Overovanie v procese</h3>
+                        <p class="text-slate-400 max-w-lg leading-relaxed text-lg">
+                            Váš účet je v 24-hodinovom testovacom režime. Naše systémy momentálne preverujú nahlásené zdravotné údaje. Funkcia evidencie sa odomkne hneď po schválení.
+                        </p>
                     </div>
                     
-                    <h2 class="text-2xl font-bold mb-6">Pridať hudobný záznam</h2>
-                    <form id="copyright-form" class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <input type="text" id="music-title-input" class="p-4 rounded-2xl bg-slate-900/50 border border-slate-700 outline-none" placeholder="Názov hudby" required>
-                        <input type="url" id="youtube-link-input" class="p-4 rounded-2xl bg-slate-900/50 border border-slate-700 outline-none" placeholder="YouTube Link (https://...)" required>
-                        <input type="text" id="platform-input" class="p-4 rounded-2xl bg-slate-900/50 border border-slate-700 outline-none" placeholder="Platforma (YouTube, Spotify)" required>
-                        <input type="text" id="user-input" class="p-4 rounded-2xl bg-slate-900/50 border border-slate-700 outline-none" placeholder="Cieľový kanál" required>
-                        <input type="date" id="date-input" class="p-4 rounded-2xl bg-slate-900/50 border border-slate-700 outline-none md:col-span-2" required>
-                        <textarea id="notes-input" class="p-4 rounded-2xl bg-slate-900/50 border border-slate-700 outline-none md:col-span-2" rows="3" placeholder="Poznámky k sťažnosti..."></textarea>
-                        <button type="submit" class="md:col-span-2 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl shadow-lg transition-all transform hover:scale-[1.01]">Pridať do evidencie</button>
-                        <p id="form-message" class="text-center text-sm md:col-span-2 font-medium"></p>
+                    <h2 class="text-3xl font-black mb-10 flex items-center uppercase tracking-tighter">
+                        <span class="w-3 h-10 bg-blue-600 rounded-full mr-5"></span>
+                        Nová autorská sťažnosť
+                    </h2>
+                    <form id="copyright-form" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-500 ml-4 uppercase">Názov hudobného diela</label>
+                            <input type="text" id="music-title-input" class="w-full p-5 rounded-3xl bg-slate-950/60 border border-slate-800 focus:border-blue-500 outline-none" placeholder="Názov piesne" required>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-500 ml-4 uppercase">Externý odkaz (YouTube)</label>
+                            <input type="url" id="youtube-link-input" class="w-full p-5 rounded-3xl bg-slate-950/60 border border-slate-800 focus:border-blue-500 outline-none" placeholder="https://..." required>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-500 ml-4 uppercase">Cieľová Platforma</label>
+                            <input type="text" id="platform-input" class="w-full p-5 rounded-3xl bg-slate-950/60 border border-slate-800 focus:border-blue-500 outline-none" placeholder="YouTube / FB / IG" required>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-500 ml-4 uppercase">Dátum narušenia</label>
+                            <input type="date" id="date-input" class="w-full p-5 rounded-3xl bg-slate-950/60 border border-slate-800 focus:border-blue-500 outline-none" required>
+                        </div>
+                        <div class="md:col-span-2 space-y-2">
+                            <label class="text-[10px] font-black text-slate-500 ml-4 uppercase">Kanál narušiteľa</label>
+                            <input type="text" id="user-input" class="w-full p-5 rounded-3xl bg-slate-950/60 border border-slate-800 focus:border-blue-500 outline-none" placeholder="Meno kanála alebo používateľa" required>
+                        </div>
+                        <div class="md:col-span-2 space-y-2">
+                            <label class="text-[10px] font-black text-slate-500 ml-4 uppercase">Poznámky k prípadu</label>
+                            <textarea id="notes-input" class="w-full p-5 rounded-3xl bg-slate-950/60 border border-slate-800 focus:border-blue-500 outline-none" rows="3" placeholder="Popíšte detaily..."></textarea>
+                        </div>
+                        <button type="submit" class="md:col-span-2 py-6 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-3xl shadow-2xl transition-all transform hover:scale-[1.01] uppercase tracking-widest">Zapísať do systému</button>
+                        <p id="form-message" class="text-center text-sm md:col-span-2 font-bold"></p>
                     </form>
                 </div>
 
-                <!-- Records List -->
-                <div class="glass p-8 rounded-3xl">
-                    <h2 class="text-2xl font-bold mb-6 flex items-center">
-                        <span class="mr-3">📋</span> Moje Záznamy
+                <!-- Records -->
+                <div class="glass p-12 rounded-[3.5rem] border border-white/5">
+                    <h2 class="text-3xl font-black mb-10 flex items-center uppercase tracking-tighter">
+                        <span class="w-3 h-10 bg-emerald-600 rounded-full mr-5"></span>
+                        Evidenčný zoznam
                     </h2>
-                    <div id="entries-list" class="space-y-4">
-                        <!-- Entries dynamic -->
-                    </div>
-                    <p id="no-entries-message" class="text-center text-slate-500 py-10 italic hidden">Zatiaľ ste nepridali žiadne záznamy.</p>
+                    <div id="entries-list" class="space-y-6"></div>
+                    <p id="no-entries-message" class="text-center text-slate-500 py-24 italic font-medium hidden">V databáze IndexedDB zatiaľ neexistujú žiadne záznamy.</p>
                 </div>
             </div>
 
-            <!-- Right Column: AI & Admin -->
-            <div class="space-y-8">
-                <!-- AI Center -->
-                <div class="glass p-6 rounded-3xl flex flex-col h-[500px]">
-                    <h2 class="text-xl font-bold mb-4 flex items-center text-blue-400">
-                        <span class="mr-2">🤖</span> AI Pomocník
+            <!-- Right Sidebar -->
+            <div class="lg:col-span-4 space-y-10">
+                <!-- AI Assistant -->
+                <div class="glass p-8 rounded-[3rem] flex flex-col h-[650px] border border-white/5 shadow-2xl">
+                    <h2 class="text-2xl font-black mb-8 flex items-center text-blue-400 uppercase tracking-tighter">
+                        <span class="mr-4">🤖</span> AI CENTRUM
                     </h2>
-                    <div id="chat-window" class="flex-grow overflow-y-auto bg-slate-950/50 rounded-2xl p-4 mb-4 space-y-3 text-sm">
-                        <div class="text-center text-slate-500 italic">Môžete položiť 10 otázok za 3 dni. Potrebný API kľúč v nastaveniach.</div>
+                    <div id="chat-window" class="flex-grow overflow-y-auto bg-slate-950/80 rounded-[2rem] p-6 mb-6 space-y-5 text-sm border border-white/5 shadow-inner">
+                        <div class="text-center text-slate-600 text-xs italic font-bold">Systém Gemini je prepojený s IndexedDB.</div>
                     </div>
-                    <div id="chat-limit-message" class="text-xs text-red-400 font-bold mb-2 hidden"></div>
-                    <form id="chat-form" class="flex gap-2">
-                        <input type="text" id="chat-input" class="flex-grow p-3 rounded-xl bg-slate-900 border border-slate-700 outline-none text-sm" placeholder="Otázka...">
-                        <button type="submit" id="chat-send-button" class="p-3 bg-blue-600 rounded-xl hover:bg-blue-500 transition-all">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" /></svg>
-                        </button>
+                    <div id="chat-limit-message" class="text-[10px] text-red-400 font-black mb-4 uppercase text-center hidden"></div>
+                    <form id="chat-form" class="flex flex-col gap-3">
+                        <input type="text" id="chat-input" class="w-full p-5 rounded-2xl bg-slate-900 border border-slate-800 outline-none text-xs focus:border-blue-500" placeholder="Položiť otázku AI...">
+                        <button type="submit" id="chat-send-button" class="w-full py-4 bg-blue-600 rounded-2xl hover:bg-blue-500 transition-all font-black uppercase text-[10px] tracking-widest shadow-xl shadow-blue-600/20">Odoslať dopyt</button>
                     </form>
                 </div>
 
-                <!-- Admin Section -->
-                <div id="admin-section" class="glass p-6 rounded-3xl hidden border-2 border-red-500/20">
-                    <h2 class="text-xl font-bold mb-4 text-red-400 flex items-center">
-                        <span class="mr-2">🛡️</span> Správa Účtov
+                <!-- Admin -->
+                <div id="admin-section" class="glass p-8 rounded-[3rem] hidden border-2 border-red-500/20 shadow-2xl">
+                    <h2 class="text-xl font-black mb-6 text-red-500 flex items-center uppercase tracking-tighter">
+                        <span class="mr-3">🛡️</span> ADMINISTRÁCIA
                     </h2>
                     <div class="space-y-4">
-                        <input type="text" id="ban-input" class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 text-sm" placeholder="Prezývka na ban...">
-                        <div class="grid grid-cols-2 gap-2">
-                            <button id="ban-button" class="py-2 bg-red-600 rounded-xl text-xs font-bold hover:bg-red-500 transition-all">Ban 3 dni</button>
-                            <button id="unban-button" class="py-2 bg-slate-700 rounded-xl text-xs font-bold hover:bg-slate-600 transition-all">Odbanovať</button>
-                        </div>
-                        <p id="ban-message" class="text-[10px] text-center"></p>
+                        <input type="text" id="ban-input" class="w-full p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs outline-none focus:border-red-500" placeholder="Meno na banovanie...">
+                        <button id="ban-button" class="w-full py-3 bg-red-600 rounded-xl text-xs font-black uppercase hover:bg-red-500 transition-all">OKAMŽITÝ BAN</button>
+                        <button id="unban-button" class="w-full py-3 bg-slate-800 rounded-xl text-xs font-black uppercase hover:bg-slate-700 transition-all">ODBANUŤ</button>
+                        <p id="ban-message" class="text-[9px] text-center font-bold uppercase"></p>
                         
-                        <div class="mt-4 pt-4 border-t border-slate-700">
-                            <h3 class="text-sm font-bold text-slate-300 mb-2 uppercase">Aktívne bany:</h3>
-                            <div id="banned-users-list" class="space-y-2 max-h-40 overflow-y-auto pr-1"></div>
+                        <div class="mt-8 pt-6 border-t border-white/5">
+                            <h3 class="text-[9px] font-black text-slate-500 mb-4 uppercase tracking-widest text-center">Databáza banov:</h3>
+                            <div id="banned-users-list" class="space-y-2 max-h-40 overflow-y-auto pr-2"></div>
                         </div>
                     </div>
                 </div>
@@ -205,24 +263,24 @@
     </div>
 
     <!-- Settings Modal -->
-    <div id="settings-modal" class="modal hidden-modal fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <div class="modal-content glass p-8 rounded-3xl shadow-2xl max-w-md w-full">
-            <h3 class="text-2xl font-bold mb-4">Nastavenia AI</h3>
-            <p class="text-slate-400 text-sm mb-6">Zadaj svoj Google Gemini API kľúč. Dáta sú uložené len lokálne v IndexedDB.</p>
-            <input type="password" id="api-key-input" class="w-full p-4 rounded-2xl bg-slate-900 border border-slate-700 outline-none mb-4" placeholder="Kľúč API">
-            <div class="flex gap-3">
-                <button id="save-api-key" class="flex-1 py-3 bg-blue-600 rounded-xl font-bold">Uložiť</button>
-                <button id="close-modal-button" class="flex-1 py-3 bg-slate-700 rounded-xl font-bold">Zavrieť</button>
+    <div id="settings-modal" class="modal hidden-modal fixed inset-0 bg-slate-950/95 backdrop-blur-2xl flex items-center justify-center p-6 z-[110]">
+        <div class="modal-content glass p-12 rounded-[4rem] shadow-2xl max-w-md w-full border border-white/10">
+            <h3 class="text-4xl font-black mb-6 uppercase tracking-tighter">AI Konfigurácia</h3>
+            <p class="text-slate-400 text-sm mb-10 leading-relaxed font-medium">Zadajte váš kľúč Google Gemini API. Kľúč je uložený v šifrovanej štruktúre IndexedDB.</p>
+            <input type="password" id="api-key-input" class="w-full p-6 rounded-3xl bg-slate-950 border border-slate-800 focus:border-blue-500 outline-none mb-8 text-sm" placeholder="Vložte API kľúč">
+            <div class="flex flex-col gap-4">
+                <button id="save-api-key" class="w-full py-5 bg-blue-600 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl shadow-blue-600/30">Uložiť nastavenia</button>
+                <button id="close-modal-button" class="w-full py-4 bg-slate-800 rounded-2xl font-black text-xs uppercase tracking-widest border border-white/10">Naspäť</button>
             </div>
-            <p id="api-key-message" class="mt-4 text-center text-xs font-medium"></p>
+            <p id="api-key-message" class="mt-6 text-center text-xs font-bold text-emerald-400"></p>
         </div>
     </div>
 
     <script>
-        /** * INDEXED DB SYSTEM - UNLIMITED STORAGE 
+        /** * INDEXED DB ENGINE 
          */
-        const DB_NAME = 'OzSpolocnostDB';
-        const DB_VERSION = 2;
+        const DB_NAME = 'OzSpolocnostV3DB';
+        const DB_VERSION = 1;
         let db;
 
         async function initDB() {
@@ -234,8 +292,6 @@
                     if (!db.objectStoreNames.contains('entries')) db.createObjectStore('entries', { keyPath: 'id' });
                     if (!db.objectStoreNames.contains('bans')) db.createObjectStore('bans', { keyPath: 'nickname' });
                     if (!db.objectStoreNames.contains('settings')) db.createObjectStore('settings', { keyPath: 'key' });
-                    
-                    // Mark existing old accounts (migration logic if needed)
                 };
                 request.onsuccess = (e) => { db = e.target.result; resolve(db); };
                 request.onerror = (e) => reject(e.target.error);
@@ -270,17 +326,17 @@
             });
         }
 
-        /** * APP LOGIC 
+        /** * CORE BUSINESS LOGIC 
          */
         const ADMIN_EMAIL = 'admin@example.com';
         const BAN_DURATION_MS = 3 * 24 * 60 * 60 * 1000;
-        const WAIT_PERIOD_MS = 24 * 60 * 60 * 1000; // 24 hodin
-
+        const WAIT_PERIOD_MS = 24 * 60 * 60 * 1000;
         let currentUser = null;
 
-        // UI Handlers
+        // UI Helpers
         const authScreen = document.getElementById('auth-screen');
         const appScreen = document.getElementById('app-screen');
+        const banScreen = document.getElementById('ban-screen');
         const loginTab = document.getElementById('login-tab');
         const registerTab = document.getElementById('register-tab');
         const loginForm = document.getElementById('login-form');
@@ -291,121 +347,126 @@
             if (target === 'login') {
                 loginForm.classList.remove('hidden');
                 registerForm.classList.add('hidden');
-                loginTab.classList.add('bg-blue-600', 'text-white');
-                loginTab.classList.remove('text-gray-400');
-                registerTab.classList.add('text-gray-400');
-                registerTab.classList.remove('bg-blue-600', 'text-white');
+                loginTab.classList.add('bg-blue-600');
+                registerTab.classList.remove('bg-blue-600');
             } else {
                 registerForm.classList.remove('hidden');
                 loginForm.classList.add('hidden');
-                registerTab.classList.add('bg-blue-600', 'text-white');
-                registerTab.classList.remove('text-gray-400');
-                loginTab.classList.add('text-gray-400');
-                loginTab.classList.remove('bg-blue-600', 'text-white');
+                registerTab.classList.add('bg-blue-600');
+                loginTab.classList.remove('bg-blue-600');
             }
         }
-
         loginTab.onclick = () => switchAuthTab('login');
         registerTab.onclick = () => switchAuthTab('register');
 
-        // Security & License Checker
-        async function checkLicenseAndBanStatus(user) {
-            // Check for explicit ban
+        // Security Check Function
+        async function checkSecurity(user) {
+            const now = Date.now();
+            
+            // Check manual bans
             const ban = await getData('bans', user.nickname);
-            if (ban && Date.now() < ban.expiry) {
-                alert(`Máte ban do: ${new Date(ban.expiry).toLocaleString()}`);
-                logout();
+            if (ban && now < ban.expiry) {
+                showBanScreen(ban.reason || "Trvalý ban za porušenie prísnych pravidiel.");
                 return false;
             }
 
-            // Waiting logic (24h)
-            if (!user.isOldAccount) {
-                const timePassed = Date.now() - user.registrationDate;
-                const badge = document.getElementById('license-status-badge');
-                const lock = document.getElementById('license-lock-overlay');
+            const badge = document.getElementById('license-status-badge');
+            const overlay = document.getElementById('license-lock-overlay');
+            const verifiedZone = document.getElementById('verified-zone');
+            const verifiedBadge = document.getElementById('verified-badge');
 
-                if (timePassed < WAIT_PERIOD_MS) {
-                    badge.classList.remove('hidden');
-                    lock.classList.remove('hidden');
-                    return true;
+            if (!user.isOldAccount) {
+                const timeDiff = now - user.registrationDate;
+
+                if (timeDiff < WAIT_PERIOD_MS) {
+                    badge.innerHTML = "🕒 VERIFIKÁCIA";
+                    badge.className = "px-5 py-2 rounded-full text-[10px] font-black uppercase bg-yellow-500/10 text-yellow-500 border-yellow-500/20";
+                    overlay.classList.remove('hidden');
+                    verifiedZone.classList.add('hidden');
+                    verifiedBadge.classList.add('hidden');
                 } else {
-                    // Check disability condition AFTER 24h
-                    if (user.hasDisability) {
-                        // Permanent Ban Logic
-                        await putData('bans', { nickname: user.nickname, expiry: Date.now() + (999 * 365 * 24 * 60 * 60 * 1000) });
-                        alert("Prístup zamietnutý trvalo (zdravotná nespôsobilosť podľa smerníc V 3.0).");
-                        logout();
+                    // Check strict condition: Autism = Ban after 24h
+                    if (user.hasAutism) {
+                        await putData('bans', { 
+                            nickname: user.nickname, 
+                            expiry: now + (999 * 365 * 24 * 60 * 60 * 1000), 
+                            reason: "Trvalý ban na základe nesplnenia duševných kritérií (Smernica V 3.0)." 
+                        });
+                        showBanScreen();
                         return false;
                     }
-                    badge.innerHTML = "✅ Licencia schválená";
-                    badge.classList.replace('text-yellow-500', 'text-emerald-500');
-                    badge.classList.replace('bg-yellow-500/20', 'bg-emerald-500/20');
-                    lock.classList.add('hidden');
+                    // NORMAL USER APPROVED
+                    badge.innerHTML = "✅ OVERENÝ";
+                    badge.className = "px-5 py-2 rounded-full text-[10px] font-black uppercase bg-emerald-500/10 text-emerald-500 border-emerald-500/20 shadow-lg shadow-emerald-500/5";
+                    overlay.classList.add('hidden');
+                    verifiedZone.classList.remove('hidden');
+                    verifiedBadge.classList.remove('hidden');
                 }
             } else {
-                document.getElementById('license-status-badge').innerHTML = "✅ Licencia (Starý účet)";
-                document.getElementById('license-lock-overlay').classList.add('hidden');
+                badge.innerHTML = "🛡️ ZAKLADATEĽ";
+                badge.className = "px-5 py-2 rounded-full text-[10px] font-black uppercase bg-purple-500/10 text-purple-500 border-purple-500/20";
+                overlay.classList.add('hidden');
+                verifiedZone.classList.remove('hidden');
+                verifiedBadge.classList.remove('hidden');
             }
             return true;
         }
 
-        // Registration
-        document.getElementById('register-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const nickname = document.getElementById('register-nickname').value;
-            const email = document.getElementById('register-email').value;
-            const password = document.getElementById('register-password').value;
-            const artistCode = document.getElementById('artist-code-input').value;
-            const noDisability = document.getElementById('check-disability').checked;
+        function showBanScreen(reason) {
+            authScreen.classList.add('hidden');
+            appScreen.classList.add('hidden');
+            if(reason) document.getElementById('ban-reason-text').textContent = reason;
+            banScreen.classList.remove('hidden');
+        }
 
+        // Registration Submit
+        registerForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const nickname = document.getElementById('register-nickname').value.trim();
+            const email = document.getElementById('register-email').value.trim();
+            const password = document.getElementById('register-password').value;
+            const hasAutism = document.getElementById('check-autism').checked;
+            
             if (await getData('users', email)) {
-                document.getElementById('register-error').textContent = 'Email je už obsadený.';
+                document.getElementById('register-error').textContent = 'E-mail už existuje.';
                 return;
             }
 
             const newUser = {
-                email, nickname, artistCode,
+                email, nickname,
                 passwordHash: btoa(password),
                 registrationDate: Date.now(),
                 isOldAccount: false,
-                hasDisability: !noDisability // Ak NEZAŠKRTOL "nemám", znamená to že MÁ
+                hasAutism: hasAutism
             };
 
             await putData('users', newUser);
-            document.getElementById('register-error').textContent = '';
-            alert("Registrácia úspešná. Licencia bude posúdená o 24 hodín.");
+            alert("Registrácia bola úspešná! Systém začal 24-hodinové overovanie.");
             switchAuthTab('login');
         };
 
-        // Login
-        document.getElementById('login-form').onsubmit = async (e) => {
+        // Login Submit
+        loginForm.onsubmit = async (e) => {
             e.preventDefault();
-            const email = document.getElementById('login-email').value;
+            const email = document.getElementById('login-email').value.trim();
             const password = document.getElementById('login-password').value;
             const user = await getData('users', email);
 
             if (user && user.passwordHash === btoa(password)) {
-                if (await checkLicenseAndBanStatus(user)) {
+                if (await checkSecurity(user)) {
                     currentUser = user;
-                    sessionStorage.setItem('current_user_email', email);
+                    sessionStorage.setItem('oz_user_session', email);
                     renderApp();
                 }
             } else {
-                document.getElementById('login-error').textContent = 'Chybné meno alebo heslo.';
+                document.getElementById('login-error').textContent = 'PRÍSTUP ZAMIETNUTÝ: NESPRÁVNE ÚDAJE.';
             }
         };
-
-        async function logout() {
-            sessionStorage.removeItem('current_user_email');
-            location.reload();
-        }
-
-        document.getElementById('logout-button').onclick = logout;
 
         async function renderApp() {
             authScreen.classList.add('hidden');
             appScreen.classList.remove('hidden');
-            document.getElementById('welcome-message').textContent = `Vitaj späť, ${currentUser.nickname}!`;
+            document.getElementById('welcome-message').textContent = `${currentUser.nickname}`;
             
             if (currentUser.email === ADMIN_EMAIL) {
                 document.getElementById('admin-section').classList.remove('hidden');
@@ -414,13 +475,18 @@
             renderEntries();
             renderBannedUsers();
             checkChatLimit();
-            checkLicenseAndBanStatus(currentUser);
+            checkSecurity(currentUser);
         }
+
+        document.getElementById('logout-button').onclick = () => {
+            sessionStorage.removeItem('oz_user_session');
+            location.reload();
+        };
 
         /** ENTRIES LOGIC */
         document.getElementById('copyright-form').onsubmit = async (e) => {
             e.preventDefault();
-            const newEntry = {
+            const entry = {
                 id: Date.now().toString(),
                 userEmail: currentUser.email,
                 title: document.getElementById('music-title-input').value,
@@ -431,10 +497,8 @@
                 notes: document.getElementById('notes-input').value,
                 createdAt: Date.now()
             };
-            await putData('entries', newEntry);
+            await putData('entries', entry);
             document.getElementById('copyright-form').reset();
-            document.getElementById('form-message').textContent = "Záznam úspešne pridaný!";
-            document.getElementById('form-message').className = "text-emerald-400 font-bold text-center md:col-span-2";
             renderEntries();
         };
 
@@ -445,27 +509,19 @@
             const mine = all.filter(e => e.userEmail === currentUser.email);
             
             list.innerHTML = '';
-            if (mine.length === 0) {
-                noMsg.classList.remove('hidden');
-                return;
-            }
+            if (mine.length === 0) { noMsg.classList.remove('hidden'); return; }
             noMsg.classList.add('hidden');
 
             mine.sort((a,b) => b.createdAt - a.createdAt).forEach(e => {
                 const div = document.createElement('div');
-                div.className = "bg-slate-900/40 p-5 rounded-2xl border border-white/5 flex justify-between items-start";
+                div.className = "glass p-6 rounded-3xl border border-white/5 flex justify-between items-center group animate-fade";
                 div.innerHTML = `
-                    <div>
-                        <h3 class="font-bold text-lg">${e.title} <span class="text-xs text-slate-500 font-normal ml-2">${e.date}</span></h3>
-                        <p class="text-blue-400 text-sm truncate max-w-xs md:max-w-md mt-1">${e.link}</p>
-                        <div class="flex space-x-3 mt-2 text-[10px] uppercase font-bold text-slate-500">
-                            <span>PLATFORMA: ${e.platform}</span>
-                            <span>POUŽÍVATEĽ: ${e.user}</span>
-                        </div>
-                        ${e.notes ? `<p class="mt-2 text-xs text-slate-300 italic">"${e.notes}"</p>` : ''}
+                    <div class="space-y-1">
+                        <h3 class="font-black text-blue-400 uppercase tracking-tight text-sm">${e.title}</h3>
+                        <p class="text-[9px] text-slate-500 font-bold uppercase">${e.date} • ${e.platform} • CIEĽ: ${e.user}</p>
                     </div>
-                    <button onclick="deleteEntry('${e.id}')" class="text-red-500/50 hover:text-red-500 p-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 112 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
+                    <button onclick="deleteEntry('${e.id}')" class="p-3 bg-red-600/10 text-red-500 rounded-xl opacity-0 group-hover:opacity-100 transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 112 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
                     </button>
                 `;
                 list.appendChild(div);
@@ -473,15 +529,87 @@
         }
 
         window.deleteEntry = async (id) => {
-            await deleteData('entries', id);
-            renderEntries();
+            if(confirm("Potvrdiť vymazanie záznamu z IndexedDB?")) {
+                await deleteData('entries', id);
+                renderEntries();
+            }
         };
 
-        /** ADMIN LOGIC */
+        /** AI CHAT LOGIC */
+        async function checkChatLimit() {
+            const usageKey = `chat_usage_${currentUser.email}`;
+            const settings = await getData('settings', usageKey) || { count: 0, lastReset: Date.now() };
+            if (Date.now() > settings.lastReset + (3 * 24 * 60 * 60 * 1000)) {
+                settings.count = 0; settings.lastReset = Date.now();
+            }
+            const isLimit = settings.count >= 10;
+            const msg = document.getElementById('chat-limit-message');
+            if (isLimit) {
+                msg.textContent = `LIMIT DOSIAHNUTÝ. RESET O 3 DNI.`;
+                msg.classList.remove('hidden');
+                document.getElementById('chat-input').disabled = true;
+            }
+            return isLimit;
+        }
+
+        document.getElementById('chat-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const query = input.value.trim();
+            const key = (await getData('settings', 'gemini_api_key'))?.value;
+            
+            if (!key) { alert("Chýba kľúč v nastaveniach."); return; }
+            if (await checkChatLimit()) return;
+            if (!query) return;
+
+            appendMsg('user', query);
+            input.value = '';
+            appendMsg('ai', 'Thinking...');
+            const lastMsg = document.getElementById('chat-window').lastChild;
+
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${key}`, {
+                    method: 'POST',
+                    body: JSON.stringify({ contents: [{ parts: [{ text: query }] }], generationConfig: { maxOutputTokens: 120 } })
+                });
+                const data = await res.json();
+                lastMsg.remove();
+                appendMsg('ai', data.candidates?.[0]?.content?.parts?.[0]?.text || "AI Error.");
+
+                const usageKey = `chat_usage_${currentUser.email}`;
+                const usage = await getData('settings', usageKey) || { count: 0, lastReset: Date.now() };
+                usage.count++;
+                await putData('settings', { key: usageKey, value: usage });
+                checkChatLimit();
+            } catch (err) { lastMsg.textContent = "CHYBA SPOJENIA."; }
+        };
+
+        function appendMsg(who, text) {
+            const win = document.getElementById('chat-window');
+            const d = document.createElement('div');
+            d.className = who === 'user' ? "bg-blue-600/30 ml-auto p-4 rounded-3xl rounded-tr-none max-w-[85%]" : "bg-slate-900/80 p-4 rounded-3xl rounded-tl-none max-w-[85%]";
+            d.innerHTML = `<span class="block text-[8px] font-black uppercase opacity-40 mb-1 tracking-widest">${who}</span><span>${text}</span>`;
+            win.appendChild(d);
+            win.scrollTop = win.scrollHeight;
+        }
+
+        // Settings / Admin
+        document.getElementById('settings-button').onclick = async () => {
+            document.getElementById('api-key-input').value = (await getData('settings', 'gemini_api_key'))?.value || '';
+            settingsModal.classList.remove('hidden-modal');
+        };
+        document.getElementById('close-modal-button').onclick = () => settingsModal.classList.add('hidden-modal');
+        document.getElementById('save-api-key').onclick = async () => {
+            const val = document.getElementById('api-key-input').value.trim();
+            await putData('settings', { key: 'gemini_api_key', value: val });
+            document.getElementById('api-key-message').textContent = "Uložené do IndexedDB!";
+            setTimeout(() => settingsModal.classList.add('hidden-modal'), 1000);
+        };
+
         document.getElementById('ban-button').onclick = async () => {
             const nick = document.getElementById('ban-input').value.trim();
             if(!nick) return;
-            await putData('bans', { nickname: nick, expiry: Date.now() + BAN_DURATION_MS });
+            await putData('bans', { nickname: nick, expiry: Date.now() + BAN_DURATION_MS, reason: "Manuálna suspendácia administrátorom." });
             document.getElementById('ban-input').value = '';
             renderBannedUsers();
         };
@@ -490,7 +618,6 @@
             const nick = document.getElementById('ban-input').value.trim();
             if(!nick) return;
             await deleteData('bans', nick);
-            document.getElementById('ban-input').value = '';
             renderBannedUsers();
         };
 
@@ -499,121 +626,28 @@
             const all = await getAllData('bans');
             list.innerHTML = '';
             all.forEach(b => {
-                const d = document.createElement('div');
-                d.className = "flex justify-between items-center bg-red-900/10 p-2 rounded text-[10px] text-slate-400";
-                d.innerHTML = `<span>${b.nickname}</span> <span class="text-red-500">${new Date(b.expiry).toLocaleDateString()}</span>`;
-                list.appendChild(d);
+                const div = document.createElement('div');
+                div.className = "p-3 bg-red-900/20 rounded-xl border border-red-500/10 flex justify-between items-center text-[8px] font-black uppercase";
+                div.innerHTML = `<span class="text-red-400">${b.nickname}</span><span class="text-slate-600">${new Date(b.expiry).toLocaleDateString()}</span>`;
+                list.appendChild(div);
             });
         }
 
-        /** AI CHAT LOGIC */
-        async function getSetting(key) {
-            const s = await getData('settings', key);
-            return s ? s.value : null;
-        }
-
-        async function checkChatLimit() {
-            const usage = await getSetting(`chat_usage_${currentUser.email}`) || { count: 0, lastReset: Date.now() };
-            if (Date.now() > usage.lastReset + (3 * 24 * 60 * 60 * 1000)) {
-                usage.count = 0;
-                usage.lastReset = Date.now();
-            }
-            const limited = usage.count >= 10;
-            const msg = document.getElementById('chat-limit-message');
-            if (limited) {
-                msg.textContent = `Limit dosiahnutý. Prístup: ${new Date(usage.lastReset + (3 * 24 * 60 * 60 * 1000)).toLocaleString()}`;
-                msg.classList.remove('hidden');
-                document.getElementById('chat-input').disabled = true;
-            } else {
-                msg.classList.add('hidden');
-                document.getElementById('chat-input').disabled = false;
-            }
-            return limited;
-        }
-
-        document.getElementById('chat-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const input = document.getElementById('chat-input');
-            const query = input.value.trim();
-            const key = await getSetting('gemini_api_key');
-            
-            if (!key) { alert("Nastavte si API kľúč v nastaveniach."); return; }
-            if (await checkChatLimit()) return;
-            if (!query) return;
-
-            appendMsg('user', query);
-            input.value = '';
-            appendMsg('ai', 'Thinking...');
-            const thinking = document.getElementById('chat-window').lastChild;
-
-            try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${key}`, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: query }] }],
-                        generationConfig: { maxOutputTokens: 120 }
-                    })
-                });
-                const data = await res.json();
-                thinking.remove();
-                const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Chyba AI.";
-                appendMsg('ai', aiText);
-
-                // Update usage
-                const usage = await getSetting(`chat_usage_${currentUser.email}`) || { count: 0, lastReset: Date.now() };
-                usage.count++;
-                await putData('settings', { key: `chat_usage_${currentUser.email}`, value: usage });
-                checkChatLimit();
-
-            } catch (err) {
-                thinking.innerHTML = "Chyba spojenia.";
-            }
-        };
-
-        function appendMsg(who, text) {
-            const win = document.getElementById('chat-window');
-            const d = document.createElement('div');
-            d.className = who === 'user' ? "bg-blue-600/30 ml-auto p-3 rounded-2xl rounded-tr-none max-w-[80%]" : "bg-slate-800 p-3 rounded-2xl rounded-tl-none max-w-[80%]";
-            d.innerHTML = `<span class="font-bold block text-[10px] mb-1 uppercase opacity-50">${who}</span>${text}`;
-            win.appendChild(d);
-            win.scrollTop = win.scrollHeight;
-        }
-
-        // Settings Modal
-        document.getElementById('settings-button').onclick = async () => {
-            const key = await getSetting('gemini_api_key');
-            document.getElementById('api-key-input').value = key || '';
-            settingsModal.classList.remove('hidden-modal');
-        };
-
-        document.getElementById('close-modal-button').onclick = () => settingsModal.classList.add('hidden-modal');
-
-        document.getElementById('save-api-key').onclick = async () => {
-            const val = document.getElementById('api-key-input').value.trim();
-            await putData('settings', { key: 'gemini_api_key', value: val });
-            document.getElementById('api-key-message').textContent = "Kľúč uložený!";
-            setTimeout(() => settingsModal.classList.add('hidden-modal'), 1000);
-        };
-
-        // Init App
+        // Startup Sequence
         window.onload = async () => {
             await initDB();
             
-            // Check for previous accounts to tag them as Old for migration
-            const users = await getAllData('users');
-            if (users.length > 0) {
-                // Pre každého existujúceho usera v systéme nastavíme, že je Starý účet (výnimka z 24h)
-                for (let u of users) {
-                    if (u.isOldAccount === undefined) {
-                        u.isOldAccount = true;
-                        await putData('users', u);
-                    }
+            const allUsers = await getAllData('users');
+            for (let u of allUsers) {
+                if (u.isOldAccount === undefined) {
+                    u.isOldAccount = true;
+                    await putData('users', u);
                 }
             }
 
-            const storedEmail = sessionStorage.getItem('current_user_email');
-            if (storedEmail) {
-                currentUser = await getData('users', storedEmail);
+            const email = sessionStorage.getItem('oz_user_session');
+            if (email) {
+                currentUser = await getData('users', email);
                 if (currentUser) renderApp();
                 else authScreen.classList.remove('hidden');
             } else {
