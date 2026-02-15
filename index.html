@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Licenčná a autorská evidencia - Oz Spoločnosť</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --accent: #3b82f6;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top right, #1e293b, #0f172a);
+            color: #f1f5f9;
+            min-height: 100-vh;
+        }
+        .glass {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .modal { transition: all 0.3s ease-in-out; }
+        .hidden-modal { opacity: 0; visibility: hidden; pointer-events: none; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    </style>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>">
+</head>
+<body class="p-4 md:p-8">
+
+    <!-- Auth Screen -->
+    <div id="auth-screen" class="flex flex-col items-center justify-center min-h-screen animate-fade-in">
+        <div class="glass p-8 rounded-3xl shadow-2xl max-w-lg w-full">
+            <div class="flex bg-slate-900/50 p-1 rounded-2xl mb-8">
+                <button id="login-tab" class="flex-1 py-2 rounded-xl text-white font-semibold transition-all bg-blue-600 shadow-lg">Prihlásenie</button>
+                <button id="register-tab" class="flex-1 py-2 rounded-xl text-gray-400 font-semibold transition-all hover:text-white">Registrácia</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form" class="space-y-4">
+                <div class="text-center mb-6">
+                    <h1 class="text-3xl font-bold">Vitaj späť</h1>
+                    <p class="text-slate-400 text-sm">Zadaj svoje údaje pre prístup</p>
+                </div>
+                <input type="email" id="login-email" class="w-full p-4 rounded-2xl bg-slate-900/50 border border-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="Email" required>
+                <input type="password" id="login-password" class="w-full p-4 rounded-2xl bg-slate-900/50 border border-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="Heslo" required>
+                <button type="submit" class="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl transition-all transform hover:scale-[1.02] active:scale-95 shadow-xl">Prihlásiť sa</button>
+                <p id="login-error" class="text-center text-red-400 text-sm font-medium"></p>
+                <p id="login-success" class="text-center text-emerald-400 text-sm font-medium hidden">Úspešné prihlásenie!</p>
+            </form>
+
+            <!-- Register Form -->
+            <form id="register-form" class="hidden space-y-4">
+                <div class="text-center mb-4">
+                    <h1 class="text-3xl font-bold">Nový účet</h1>
+                    <p class="text-slate-400 text-sm">Vytvor si identitu umelca</p>
+                </div>
+                <input type="text" id="register-nickname" class="w-full p-3 rounded-xl bg-slate-900/50 border border-slate-700 outline-none" placeholder="Prezývka" required>
+                <input type="email" id="register-email" class="w-full p-3 rounded-xl bg-slate-900/50 border border-slate-700 outline-none" placeholder="Email" required>
+                <input type="password" id="register-password" class="w-full p-3 rounded-xl bg-slate-900/50 border border-slate-700 outline-none" placeholder="Heslo (min. 6 znakov)" required>
+                <input type="text" id="artist-code-input" class="w-full p-3 rounded-xl bg-slate-900/50 border border-slate-700 outline-none" placeholder="Vlastný kód umelca" required>
+                
+                <!-- Mandatory Checkboxes -->
+                <div class="space-y-2 p-4 bg-slate-900/30 rounded-2xl border border-slate-700/50">
+                    <label class="flex items-center space-x-3 cursor-pointer group">
+                        <input type="checkbox" id="check-age" class="w-5 h-5 rounded border-slate-700 bg-slate-800 text-blue-600 focus:ring-blue-500" required>
+                        <span class="text-sm text-slate-300 group-hover:text-white transition-colors">Mám viac ako 18 rokov</span>
+                    </label>
+                    <label class="flex items-center space-x-3 cursor-pointer group">
+                        <input type="checkbox" id="check-disability" class="w-5 h-5 rounded border-slate-700 bg-slate-800 text-blue-600 focus:ring-blue-500">
+                        <span class="text-sm text-slate-300 group-hover:text-white transition-colors text-left">Nemám autizmus ani iné postihnutie</span>
+                    </label>
+                    <p class="text-[10px] text-slate-500 italic mt-2 leading-tight">* Vyhlásenie o zdravotnom stave je povinné pre pridelenie zákonnej licencie po 24 hodinách.</p>
+                </div>
+
+                <button type="submit" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-2xl transition-all transform hover:scale-[1.02] shadow-xl">Registrovať sa</button>
+                <p id="register-error" class="text-center text-red-400 text-sm font-medium"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App Screen -->
+    <div id="app-screen" class="hidden max-w-6xl mx-auto space-y-8 animate-fade-in">
+        <header class="flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-800/40 p-6 rounded-3xl border border-white/5">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg">🎵</div>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight">Oz Spoločnosť</h1>
+                    <p id="welcome-message" class="text-blue-400 text-sm font-medium"></p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <div id="license-status-badge" class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-yellow-500/20 text-yellow-500 border border-yellow-500/50">
+                    Overovanie licencie (24h)
+                </div>
+                <button id="settings-button" class="p-3 glass rounded-2xl hover:bg-slate-700 transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-.21-.88-.21-1.26 0l-2.43 1.34a1 1 0 00-.5.89v.76c.48.51 1.07 1.25 1.63 2.11a7.01 7.01 0 002.56 2.56c.86.56 1.6 1.15 2.11 1.63h.76a1 1 0 00.89-.5l1.34-2.43c.21-.38.21-.88 0-1.26l-1.34-2.43a1 1 0 00-.89-.5h-.76c-.51-.48-1.25-1.07-2.11-1.63a7.01 7.01 0 00-2.56-2.56zm-1.49 9.33a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" /></svg>
+                </button>
+                <button id="logout-button" class="px-6 py-2.5 bg-red-600/20 text-red-500 hover:bg-red-600 hover:text-white font-bold rounded-2xl border border-red-600/30 transition-all">Odhlásiť sa</button>
+            </div>
+        </header>
+
+        <div id="main-content" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column: Form & Info -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Registration Info Card (Rules) -->
+                <div class="glass p-6 rounded-3xl space-y-4 border-l-4 border-l-blue-500">
+                    <h2 class="text-xl font-bold text-blue-400">Pravidlá a Smernice V 3.0</h2>
+                    <div class="grid md:grid-cols-2 gap-4 text-sm text-slate-400">
+                        <div class="space-y-2">
+                            <p class="text-slate-200 font-semibold underline">Zákonná licencia</p>
+                            <p>Povolenie na používanie licencie sa udeľuje po 24-hodinovom overení identity a zdravotného stavu.</p>
+                        </div>
+                        <div class="space-y-2">
+                            <p class="text-slate-200 font-semibold underline">Kritériá prijatia</p>
+                            <p>Umelec musí byť plnoletý a v plnej duševnej spôsobilosti. Porušenie vedie k permanentnému banu.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Entry Form -->
+                <div id="entry-form-container" class="glass p-8 rounded-3xl relative overflow-hidden group">
+                    <div id="license-lock-overlay" class="absolute inset-0 bg-slate-900/90 backdrop-blur-md z-10 flex flex-col items-center justify-center text-center p-6 hidden">
+                        <div class="text-4xl mb-4">🔒</div>
+                        <h3 class="text-xl font-bold text-white mb-2">Prístup zamietnutý</h3>
+                        <p class="text-slate-400 max-w-sm">Váš účet momentálne čaká na overenie zákonnej licencie. Skúste to prosím o 24 hodín od registrácie.</p>
+                    </div>
+                    
+                    <h2 class="text-2xl font-bold mb-6">Pridať hudobný záznam</h2>
+                    <form id="copyright-form" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <input type="text" id="music-title-input" class="p-4 rounded-2xl bg-slate-900/50 border border-slate-700 outline-none" placeholder="Názov hudby" required>
+                        <input type="url" id="youtube-link-input" class="p-4 rounded-2xl bg-slate-900/50 border border-slate-700 outline-none" placeholder="YouTube Link (https://...)" required>
+                        <input type="text" id="platform-input" class="p-4 rounded-2xl bg-slate-900/50 border border-slate-700 outline-none" placeholder="Platforma (YouTube, Spotify)" required>
+                        <input type="text" id="user-input" class="p-4 rounded-2xl bg-slate-900/50 border border-slate-700 outline-none" placeholder="Cieľový kanál" required>
+                        <input type="date" id="date-input" class="p-4 rounded-2xl bg-slate-900/50 border border-slate-700 outline-none md:col-span-2" required>
+                        <textarea id="notes-input" class="p-4 rounded-2xl bg-slate-900/50 border border-slate-700 outline-none md:col-span-2" rows="3" placeholder="Poznámky k sťažnosti..."></textarea>
+                        <button type="submit" class="md:col-span-2 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl shadow-lg transition-all transform hover:scale-[1.01]">Pridať do evidencie</button>
+                        <p id="form-message" class="text-center text-sm md:col-span-2 font-medium"></p>
+                    </form>
+                </div>
+
+                <!-- Records List -->
+                <div class="glass p-8 rounded-3xl">
+                    <h2 class="text-2xl font-bold mb-6 flex items-center">
+                        <span class="mr-3">📋</span> Moje Záznamy
+                    </h2>
+                    <div id="entries-list" class="space-y-4">
+                        <!-- Entries dynamic -->
+                    </div>
+                    <p id="no-entries-message" class="text-center text-slate-500 py-10 italic hidden">Zatiaľ ste nepridali žiadne záznamy.</p>
+                </div>
+            </div>
+
+            <!-- Right Column: AI & Admin -->
+            <div class="space-y-8">
+                <!-- AI Center -->
+                <div class="glass p-6 rounded-3xl flex flex-col h-[500px]">
+                    <h2 class="text-xl font-bold mb-4 flex items-center text-blue-400">
+                        <span class="mr-2">🤖</span> AI Pomocník
+                    </h2>
+                    <div id="chat-window" class="flex-grow overflow-y-auto bg-slate-950/50 rounded-2xl p-4 mb-4 space-y-3 text-sm">
+                        <div class="text-center text-slate-500 italic">Môžete položiť 10 otázok za 3 dni. Potrebný API kľúč v nastaveniach.</div>
+                    </div>
+                    <div id="chat-limit-message" class="text-xs text-red-400 font-bold mb-2 hidden"></div>
+                    <form id="chat-form" class="flex gap-2">
+                        <input type="text" id="chat-input" class="flex-grow p-3 rounded-xl bg-slate-900 border border-slate-700 outline-none text-sm" placeholder="Otázka...">
+                        <button type="submit" id="chat-send-button" class="p-3 bg-blue-600 rounded-xl hover:bg-blue-500 transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" /></svg>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Admin Section -->
+                <div id="admin-section" class="glass p-6 rounded-3xl hidden border-2 border-red-500/20">
+                    <h2 class="text-xl font-bold mb-4 text-red-400 flex items-center">
+                        <span class="mr-2">🛡️</span> Správa Účtov
+                    </h2>
+                    <div class="space-y-4">
+                        <input type="text" id="ban-input" class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 text-sm" placeholder="Prezývka na ban...">
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="ban-button" class="py-2 bg-red-600 rounded-xl text-xs font-bold hover:bg-red-500 transition-all">Ban 3 dni</button>
+                            <button id="unban-button" class="py-2 bg-slate-700 rounded-xl text-xs font-bold hover:bg-slate-600 transition-all">Odbanovať</button>
+                        </div>
+                        <p id="ban-message" class="text-[10px] text-center"></p>
+                        
+                        <div class="mt-4 pt-4 border-t border-slate-700">
+                            <h3 class="text-sm font-bold text-slate-300 mb-2 uppercase">Aktívne bany:</h3>
+                            <div id="banned-users-list" class="space-y-2 max-h-40 overflow-y-auto pr-1"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal hidden-modal fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="modal-content glass p-8 rounded-3xl shadow-2xl max-w-md w-full">
+            <h3 class="text-2xl font-bold mb-4">Nastavenia AI</h3>
+            <p class="text-slate-400 text-sm mb-6">Zadaj svoj Google Gemini API kľúč. Dáta sú uložené len lokálne v IndexedDB.</p>
+            <input type="password" id="api-key-input" class="w-full p-4 rounded-2xl bg-slate-900 border border-slate-700 outline-none mb-4" placeholder="Kľúč API">
+            <div class="flex gap-3">
+                <button id="save-api-key" class="flex-1 py-3 bg-blue-600 rounded-xl font-bold">Uložiť</button>
+                <button id="close-modal-button" class="flex-1 py-3 bg-slate-700 rounded-xl font-bold">Zavrieť</button>
+            </div>
+            <p id="api-key-message" class="mt-4 text-center text-xs font-medium"></p>
+        </div>
+    </div>
+
+    <script>
+        /** * INDEXED DB SYSTEM - UNLIMITED STORAGE 
+         */
+        const DB_NAME = 'OzSpolocnostDB';
+        const DB_VERSION = 2;
+        let db;
+
+        async function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('users')) db.createObjectStore('users', { keyPath: 'email' });
+                    if (!db.objectStoreNames.contains('entries')) db.createObjectStore('entries', { keyPath: 'id' });
+                    if (!db.objectStoreNames.contains('bans')) db.createObjectStore('bans', { keyPath: 'nickname' });
+                    if (!db.objectStoreNames.contains('settings')) db.createObjectStore('settings', { keyPath: 'key' });
+                    
+                    // Mark existing old accounts (migration logic if needed)
+                };
+                request.onsuccess = (e) => { db = e.target.result; resolve(db); };
+                request.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        async function putData(storeName, data) {
+            const tx = db.transaction(storeName, 'readwrite');
+            return new Promise((resolve) => {
+                tx.objectStore(storeName).put(data).onsuccess = () => resolve();
+            });
+        }
+
+        async function getData(storeName, key) {
+            const tx = db.transaction(storeName, 'readonly');
+            return new Promise((resolve) => {
+                tx.objectStore(storeName).get(key).onsuccess = (e) => resolve(e.target.result);
+            });
+        }
+
+        async function getAllData(storeName) {
+            const tx = db.transaction(storeName, 'readonly');
+            return new Promise((resolve) => {
+                tx.objectStore(storeName).getAll().onsuccess = (e) => resolve(e.target.result);
+            });
+        }
+
+        async function deleteData(storeName, key) {
+            const tx = db.transaction(storeName, 'readwrite');
+            return new Promise((resolve) => {
+                tx.objectStore(storeName).delete(key).onsuccess = () => resolve();
+            });
+        }
+
+        /** * APP LOGIC 
+         */
+        const ADMIN_EMAIL = 'admin@example.com';
+        const BAN_DURATION_MS = 3 * 24 * 60 * 60 * 1000;
+        const WAIT_PERIOD_MS = 24 * 60 * 60 * 1000; // 24 hodin
+
+        let currentUser = null;
+
+        // UI Handlers
+        const authScreen = document.getElementById('auth-screen');
+        const appScreen = document.getElementById('app-screen');
+        const loginTab = document.getElementById('login-tab');
+        const registerTab = document.getElementById('register-tab');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const settingsModal = document.getElementById('settings-modal');
+
+        function switchAuthTab(target) {
+            if (target === 'login') {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                loginTab.classList.add('bg-blue-600', 'text-white');
+                loginTab.classList.remove('text-gray-400');
+                registerTab.classList.add('text-gray-400');
+                registerTab.classList.remove('bg-blue-600', 'text-white');
+            } else {
+                registerForm.classList.remove('hidden');
+                loginForm.classList.add('hidden');
+                registerTab.classList.add('bg-blue-600', 'text-white');
+                registerTab.classList.remove('text-gray-400');
+                loginTab.classList.add('text-gray-400');
+                loginTab.classList.remove('bg-blue-600', 'text-white');
+            }
+        }
+
+        loginTab.onclick = () => switchAuthTab('login');
+        registerTab.onclick = () => switchAuthTab('register');
+
+        // Security & License Checker
+        async function checkLicenseAndBanStatus(user) {
+            // Check for explicit ban
+            const ban = await getData('bans', user.nickname);
+            if (ban && Date.now() < ban.expiry) {
+                alert(`Máte ban do: ${new Date(ban.expiry).toLocaleString()}`);
+                logout();
+                return false;
+            }
+
+            // Waiting logic (24h)
+            if (!user.isOldAccount) {
+                const timePassed = Date.now() - user.registrationDate;
+                const badge = document.getElementById('license-status-badge');
+                const lock = document.getElementById('license-lock-overlay');
+
+                if (timePassed < WAIT_PERIOD_MS) {
+                    badge.classList.remove('hidden');
+                    lock.classList.remove('hidden');
+                    return true;
+                } else {
+                    // Check disability condition AFTER 24h
+                    if (user.hasDisability) {
+                        // Permanent Ban Logic
+                        await putData('bans', { nickname: user.nickname, expiry: Date.now() + (999 * 365 * 24 * 60 * 60 * 1000) });
+                        alert("Prístup zamietnutý trvalo (zdravotná nespôsobilosť podľa smerníc V 3.0).");
+                        logout();
+                        return false;
+                    }
+                    badge.innerHTML = "✅ Licencia schválená";
+                    badge.classList.replace('text-yellow-500', 'text-emerald-500');
+                    badge.classList.replace('bg-yellow-500/20', 'bg-emerald-500/20');
+                    lock.classList.add('hidden');
+                }
+            } else {
+                document.getElementById('license-status-badge').innerHTML = "✅ Licencia (Starý účet)";
+                document.getElementById('license-lock-overlay').classList.add('hidden');
+            }
+            return true;
+        }
+
+        // Registration
+        document.getElementById('register-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const nickname = document.getElementById('register-nickname').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const artistCode = document.getElementById('artist-code-input').value;
+            const noDisability = document.getElementById('check-disability').checked;
+
+            if (await getData('users', email)) {
+                document.getElementById('register-error').textContent = 'Email je už obsadený.';
+                return;
+            }
+
+            const newUser = {
+                email, nickname, artistCode,
+                passwordHash: btoa(password),
+                registrationDate: Date.now(),
+                isOldAccount: false,
+                hasDisability: !noDisability // Ak NEZAŠKRTOL "nemám", znamená to že MÁ
+            };
+
+            await putData('users', newUser);
+            document.getElementById('register-error').textContent = '';
+            alert("Registrácia úspešná. Licencia bude posúdená o 24 hodín.");
+            switchAuthTab('login');
+        };
+
+        // Login
+        document.getElementById('login-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const user = await getData('users', email);
+
+            if (user && user.passwordHash === btoa(password)) {
+                if (await checkLicenseAndBanStatus(user)) {
+                    currentUser = user;
+                    sessionStorage.setItem('current_user_email', email);
+                    renderApp();
+                }
+            } else {
+                document.getElementById('login-error').textContent = 'Chybné meno alebo heslo.';
+            }
+        };
+
+        async function logout() {
+            sessionStorage.removeItem('current_user_email');
+            location.reload();
+        }
+
+        document.getElementById('logout-button').onclick = logout;
+
+        async function renderApp() {
+            authScreen.classList.add('hidden');
+            appScreen.classList.remove('hidden');
+            document.getElementById('welcome-message').textContent = `Vitaj späť, ${currentUser.nickname}!`;
+            
+            if (currentUser.email === ADMIN_EMAIL) {
+                document.getElementById('admin-section').classList.remove('hidden');
+            }
+
+            renderEntries();
+            renderBannedUsers();
+            checkChatLimit();
+            checkLicenseAndBanStatus(currentUser);
+        }
+
+        /** ENTRIES LOGIC */
+        document.getElementById('copyright-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const newEntry = {
+                id: Date.now().toString(),
+                userEmail: currentUser.email,
+                title: document.getElementById('music-title-input').value,
+                link: document.getElementById('youtube-link-input').value,
+                platform: document.getElementById('platform-input').value,
+                user: document.getElementById('user-input').value,
+                date: document.getElementById('date-input').value,
+                notes: document.getElementById('notes-input').value,
+                createdAt: Date.now()
+            };
+            await putData('entries', newEntry);
+            document.getElementById('copyright-form').reset();
+            document.getElementById('form-message').textContent = "Záznam úspešne pridaný!";
+            document.getElementById('form-message').className = "text-emerald-400 font-bold text-center md:col-span-2";
+            renderEntries();
+        };
+
+        async function renderEntries() {
+            const list = document.getElementById('entries-list');
+            const noMsg = document.getElementById('no-entries-message');
+            const all = await getAllData('entries');
+            const mine = all.filter(e => e.userEmail === currentUser.email);
+            
+            list.innerHTML = '';
+            if (mine.length === 0) {
+                noMsg.classList.remove('hidden');
+                return;
+            }
+            noMsg.classList.add('hidden');
+
+            mine.sort((a,b) => b.createdAt - a.createdAt).forEach(e => {
+                const div = document.createElement('div');
+                div.className = "bg-slate-900/40 p-5 rounded-2xl border border-white/5 flex justify-between items-start";
+                div.innerHTML = `
+                    <div>
+                        <h3 class="font-bold text-lg">${e.title} <span class="text-xs text-slate-500 font-normal ml-2">${e.date}</span></h3>
+                        <p class="text-blue-400 text-sm truncate max-w-xs md:max-w-md mt-1">${e.link}</p>
+                        <div class="flex space-x-3 mt-2 text-[10px] uppercase font-bold text-slate-500">
+                            <span>PLATFORMA: ${e.platform}</span>
+                            <span>POUŽÍVATEĽ: ${e.user}</span>
+                        </div>
+                        ${e.notes ? `<p class="mt-2 text-xs text-slate-300 italic">"${e.notes}"</p>` : ''}
+                    </div>
+                    <button onclick="deleteEntry('${e.id}')" class="text-red-500/50 hover:text-red-500 p-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 112 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
+                    </button>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        window.deleteEntry = async (id) => {
+            await deleteData('entries', id);
+            renderEntries();
+        };
+
+        /** ADMIN LOGIC */
+        document.getElementById('ban-button').onclick = async () => {
+            const nick = document.getElementById('ban-input').value.trim();
+            if(!nick) return;
+            await putData('bans', { nickname: nick, expiry: Date.now() + BAN_DURATION_MS });
+            document.getElementById('ban-input').value = '';
+            renderBannedUsers();
+        };
+
+        document.getElementById('unban-button').onclick = async () => {
+            const nick = document.getElementById('ban-input').value.trim();
+            if(!nick) return;
+            await deleteData('bans', nick);
+            document.getElementById('ban-input').value = '';
+            renderBannedUsers();
+        };
+
+        async function renderBannedUsers() {
+            const list = document.getElementById('banned-users-list');
+            const all = await getAllData('bans');
+            list.innerHTML = '';
+            all.forEach(b => {
+                const d = document.createElement('div');
+                d.className = "flex justify-between items-center bg-red-900/10 p-2 rounded text-[10px] text-slate-400";
+                d.innerHTML = `<span>${b.nickname}</span> <span class="text-red-500">${new Date(b.expiry).toLocaleDateString()}</span>`;
+                list.appendChild(d);
+            });
+        }
+
+        /** AI CHAT LOGIC */
+        async function getSetting(key) {
+            const s = await getData('settings', key);
+            return s ? s.value : null;
+        }
+
+        async function checkChatLimit() {
+            const usage = await getSetting(`chat_usage_${currentUser.email}`) || { count: 0, lastReset: Date.now() };
+            if (Date.now() > usage.lastReset + (3 * 24 * 60 * 60 * 1000)) {
+                usage.count = 0;
+                usage.lastReset = Date.now();
+            }
+            const limited = usage.count >= 10;
+            const msg = document.getElementById('chat-limit-message');
+            if (limited) {
+                msg.textContent = `Limit dosiahnutý. Prístup: ${new Date(usage.lastReset + (3 * 24 * 60 * 60 * 1000)).toLocaleString()}`;
+                msg.classList.remove('hidden');
+                document.getElementById('chat-input').disabled = true;
+            } else {
+                msg.classList.add('hidden');
+                document.getElementById('chat-input').disabled = false;
+            }
+            return limited;
+        }
+
+        document.getElementById('chat-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const query = input.value.trim();
+            const key = await getSetting('gemini_api_key');
+            
+            if (!key) { alert("Nastavte si API kľúč v nastaveniach."); return; }
+            if (await checkChatLimit()) return;
+            if (!query) return;
+
+            appendMsg('user', query);
+            input.value = '';
+            appendMsg('ai', 'Thinking...');
+            const thinking = document.getElementById('chat-window').lastChild;
+
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${key}`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: query }] }],
+                        generationConfig: { maxOutputTokens: 120 }
+                    })
+                });
+                const data = await res.json();
+                thinking.remove();
+                const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Chyba AI.";
+                appendMsg('ai', aiText);
+
+                // Update usage
+                const usage = await getSetting(`chat_usage_${currentUser.email}`) || { count: 0, lastReset: Date.now() };
+                usage.count++;
+                await putData('settings', { key: `chat_usage_${currentUser.email}`, value: usage });
+                checkChatLimit();
+
+            } catch (err) {
+                thinking.innerHTML = "Chyba spojenia.";
+            }
+        };
+
+        function appendMsg(who, text) {
+            const win = document.getElementById('chat-window');
+            const d = document.createElement('div');
+            d.className = who === 'user' ? "bg-blue-600/30 ml-auto p-3 rounded-2xl rounded-tr-none max-w-[80%]" : "bg-slate-800 p-3 rounded-2xl rounded-tl-none max-w-[80%]";
+            d.innerHTML = `<span class="font-bold block text-[10px] mb-1 uppercase opacity-50">${who}</span>${text}`;
+            win.appendChild(d);
+            win.scrollTop = win.scrollHeight;
+        }
+
+        // Settings Modal
+        document.getElementById('settings-button').onclick = async () => {
+            const key = await getSetting('gemini_api_key');
+            document.getElementById('api-key-input').value = key || '';
+            settingsModal.classList.remove('hidden-modal');
+        };
+
+        document.getElementById('close-modal-button').onclick = () => settingsModal.classList.add('hidden-modal');
+
+        document.getElementById('save-api-key').onclick = async () => {
+            const val = document.getElementById('api-key-input').value.trim();
+            await putData('settings', { key: 'gemini_api_key', value: val });
+            document.getElementById('api-key-message').textContent = "Kľúč uložený!";
+            setTimeout(() => settingsModal.classList.add('hidden-modal'), 1000);
+        };
+
+        // Init App
+        window.onload = async () => {
+            await initDB();
+            
+            // Check for previous accounts to tag them as Old for migration
+            const users = await getAllData('users');
+            if (users.length > 0) {
+                // Pre každého existujúceho usera v systéme nastavíme, že je Starý účet (výnimka z 24h)
+                for (let u of users) {
+                    if (u.isOldAccount === undefined) {
+                        u.isOldAccount = true;
+                        await putData('users', u);
+                    }
+                }
+            }
+
+            const storedEmail = sessionStorage.getItem('current_user_email');
+            if (storedEmail) {
+                currentUser = await getData('users', storedEmail);
+                if (currentUser) renderApp();
+                else authScreen.classList.remove('hidden');
+            } else {
+                authScreen.classList.remove('hidden');
+            }
+        };
+    </script>
+</body>
+</html>
